@@ -252,8 +252,7 @@ This project is licensed under the [MIT License](./LICENSE).
 **Built with dedication by Bala Adhish**
 
 - GitHub: [@AdhishMagic](https://github.com/AdhishMagic)
-- LinkedIn: Add your LinkedIn URL
-- Portfolio: Add your portfolio URL
+
 
 ---
 
