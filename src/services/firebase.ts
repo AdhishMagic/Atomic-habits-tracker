@@ -21,6 +21,4 @@ const hasFirebaseConfig = Boolean(
 
 const firebaseApp = hasFirebaseConfig ? initializeApp(firebaseConfig) : null;
 
-export const appId = firebaseConfig.appId || firebaseConfig.projectId || 'atomic-habits-tracker';
 export const db = firebaseApp ? getDatabase(firebaseApp) : null;
-export const isFirebaseConfigured = hasFirebaseConfig;
