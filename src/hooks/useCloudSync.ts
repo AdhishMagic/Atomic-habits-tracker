@@ -1,8 +1,8 @@
 import { type Dispatch, type SetStateAction, useCallback, useEffect, useState } from 'react';
 import type { User } from 'firebase/auth';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
-import { doc, onSnapshot, setDoc } from 'firebase/firestore';
-import { appId, auth, db } from '../services/firebase';
+import { get, onValue, ref, set, update, type Database } from 'firebase/database';
+import { auth, db } from '../services/firebase';
 import type { HabitData, SyncStatus } from '../types';
 import { saveStoredData, saveStoredHabits } from '../utils/storage';
 
@@ -10,6 +10,14 @@ type UseCloudSyncOptions = {
   setData: Dispatch<SetStateAction<HabitData>>;
   setHabits: Dispatch<SetStateAction<string[]>>;
 };
+
+type TrackerCloudState = {
+  data?: HabitData;
+  habits?: string[];
+  lastUpdated?: string;
+};
+
+const getTrackerRef = (database: Database, uid: string) => ref(database, `users/${uid}/trackerData`);
 
 export const useCloudSync = ({ setData, setHabits }: UseCloudSyncOptions) => {
   const [user, setUser] = useState<User | null>(null);
@@ -42,27 +50,43 @@ export const useCloudSync = ({ setData, setHabits }: UseCloudSyncOptions) => {
     if (!user || !db) return;
 
     setSyncStatus('syncing');
-    const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'trackerData', 'main');
+    const trackerRef = getTrackerRef(db, user.uid);
 
-    const unsubscribe = onSnapshot(
-      docRef,
-      docSnap => {
-        if (docSnap.exists()) {
-          const cloudData = docSnap.data();
+    const applyCloudState = (cloudData: TrackerCloudState | null | undefined) => {
+      if (!cloudData) return;
 
-          if (cloudData.data) {
-            const syncedData = cloudData.data as HabitData;
-            setData(syncedData);
-            saveStoredData(syncedData);
-          }
+      if (cloudData.data) {
+        const syncedData = cloudData.data as HabitData;
+        setData(syncedData);
+        saveStoredData(syncedData);
+      }
 
-          if (cloudData.habits) {
-            const syncedHabits = cloudData.habits as string[];
-            setHabits(syncedHabits);
-            saveStoredHabits(syncedHabits);
-          }
+      if (cloudData.habits) {
+        const syncedHabits = cloudData.habits as string[];
+        setHabits(syncedHabits);
+        saveStoredHabits(syncedHabits);
+      }
+    };
+
+    const syncInitialCloudState = async () => {
+      try {
+        const snapshot = await get(trackerRef);
+        if (snapshot.exists()) {
+          applyCloudState(snapshot.val() as TrackerCloudState);
         }
+      } catch (error) {
+        console.error('Initial sync load error:', error);
+      }
+    };
 
+    void syncInitialCloudState();
+
+    const unsubscribe = onValue(
+      trackerRef,
+      snapshot => {
+        if (snapshot.exists()) {
+          applyCloudState(snapshot.val() as TrackerCloudState);
+        }
         setSyncStatus('synced');
       },
       error => {
@@ -81,16 +105,21 @@ export const useCloudSync = ({ setData, setHabits }: UseCloudSyncOptions) => {
       setSyncStatus('syncing');
 
       try {
-        const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'trackerData', 'main');
-        await setDoc(
-          docRef,
-          {
-            data: newData,
-            habits: newHabits,
-            lastUpdated: new Date().toISOString(),
-          },
-          { merge: true },
-        );
+        const trackerRef = getTrackerRef(db, user.uid);
+        const cloudPayload: TrackerCloudState = {
+          data: newData,
+          habits: newHabits,
+          lastUpdated: new Date().toISOString(),
+        };
+
+        const existingSnapshot = await get(trackerRef);
+
+        if (existingSnapshot.exists()) {
+          await update(trackerRef, cloudPayload);
+        } else {
+          await set(trackerRef, cloudPayload);
+        }
+
         setSyncStatus('synced');
       } catch (error) {
         console.error('Failed to push to cloud', error);

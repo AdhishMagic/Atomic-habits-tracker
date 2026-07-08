@@ -1,6 +1,6 @@
 # Atomic Habits Tracker
 
-A production-ready, cloud-synced Atomic Habits Tracker built with React 18, TypeScript, Vite, Tailwind CSS, Firebase, Recharts, and Lucide icons.
+A production-ready, cloud-synced Atomic Habits Tracker built with React 18, TypeScript, Vite, Tailwind CSS, Firebase Realtime Database, Recharts, and Lucide icons.
 
 ## Features
 
@@ -12,7 +12,7 @@ A production-ready, cloud-synced Atomic Habits Tracker built with React 18, Type
 - Streak, perfect-day, best-month, and habit-performance calculations
 - Responsive desktop, tablet, and mobile layout
 - Mobile sidebar navigation
-- Firebase anonymous auth and Firestore cloud sync
+- Firebase anonymous auth and Realtime Database cloud sync
 - Local Storage fallback when Firebase is not configured or unavailable
 - Offline JSON backup export
 - Vercel-ready Vite build
@@ -33,7 +33,7 @@ Add screenshots after deployment:
 - Vite
 - Tailwind CSS
 - Firebase Authentication
-- Cloud Firestore
+- Firebase Realtime Database
 - Recharts
 - Lucide React
 
@@ -83,6 +83,7 @@ Create a `.env` file from `.env.example` and add your Firebase project values:
 ```bash
 VITE_FIREBASE_API_KEY=
 VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_DATABASE_URL=
 VITE_FIREBASE_PROJECT_ID=
 VITE_FIREBASE_STORAGE_BUCKET=
 VITE_FIREBASE_MESSAGING_SENDER_ID=
@@ -98,15 +99,32 @@ If Firebase variables are omitted, the app still runs with Local Storage fallbac
 
 1. Create a Firebase project.
 2. Enable Anonymous Authentication in Firebase Authentication.
-3. Create a Cloud Firestore database.
+3. Create a Realtime Database instance and copy its database URL into `VITE_FIREBASE_DATABASE_URL`.
 4. Add the Firebase web app config values to `.env`.
-5. Configure Firestore rules for your deployment needs.
+5. Configure Realtime Database rules for your deployment needs.
 
 The app stores user data under:
 
 ```text
-artifacts/{firebaseAppId}/users/{anonymousUserId}/trackerData/main
+users/{anonymousUserId}/trackerData/{data,habits,lastUpdated}
 ```
+
+Suggested starter Realtime Database rules:
+
+```json
+{
+   "rules": {
+      "users": {
+         "$uid": {
+            ".read": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && auth.uid === $uid"
+         }
+      }
+   }
+}
+```
+
+If you need public read or a different access model, adjust the rules before deployment.
 
 ## Deployment
 
@@ -120,6 +138,8 @@ artifacts/{firebaseAppId}/users/{anonymousUserId}/trackerData/main
 4. Deploy.
 
 No additional Vercel configuration is required.
+
+If you rotate Firebase credentials or move to a new Realtime Database instance, update the Vercel environment variables and redeploy.
 
 ## Build
 
