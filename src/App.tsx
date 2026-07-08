@@ -15,6 +15,11 @@ import type { AccessMode, ConfirmModalState, HabitData, HabitModalState } from '
 import { DEFAULT_HABITS, DAYS_OF_WEEK, EDIT_PIN, MONTHS, YEARS } from './utils/constants';
 import { clearStoredData, loadStoredData, loadStoredHabits, saveStoredData, saveStoredHabits } from './utils/storage';
 
+const getHabitColumnWidth = (habit: string) => {
+  const textWidth = habit.length * 8;
+  return Math.max(76, Math.min(180, textWidth));
+};
+
 export default function App() {
   // Access Control State
   const [accessMode, setAccessMode] = useState<AccessMode | null>(() => {
@@ -467,26 +472,39 @@ export default function App() {
           <div className="overflow-x-auto overflow-y-auto flex-1 excel-scroll">
             <table className="w-full text-sm text-left whitespace-nowrap min-w-max">
               <thead className="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0 z-20">
-                <tr>
-                  <th className="px-3 py-3 sticky left-0 bg-gray-50 z-30 border-b border-r border-gray-200 shadow-[1px_0_0_0_#e5e7eb]">Date</th>
-                  <th className="px-3 py-3 sticky left-[55px] sm:left-[60px] bg-gray-50 z-30 border-b border-r border-gray-200 shadow-[1px_0_0_0_#e5e7eb]">Day</th>
+                <tr className="h-auto align-bottom">
+                  <th className="px-3 py-3 sticky left-0 bg-gray-50 z-30 border-b border-r border-gray-200 shadow-[1px_0_0_0_#e5e7eb] align-bottom">Date</th>
+                  <th className="px-3 py-3 sticky left-[55px] sm:left-[60px] bg-gray-50 z-30 border-b border-r border-gray-200 shadow-[1px_0_0_0_#e5e7eb] align-bottom">Day</th>
                   {habits.map(habit => (
-                    <th key={habit} onClick={() => accessMode === 'edit' && openEditHabitModal(habit)} className={`px-2 py-3 border-b border-r border-gray-200 writing-vertical max-w-[40px] truncate group ${accessMode === 'edit' ? 'cursor-pointer hover:bg-gray-100' : ''} transition-colors`} title={accessMode === 'edit' ? `Edit ${habit}` : habit}>
-                      <span className="inline-block transform -rotate-45 origin-bottom-left pt-6 pb-2 w-24 truncate group-hover:text-blue-600 flex items-center gap-1">
-                        {habit} {accessMode === 'edit' && <Edit2 size={12} className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />}
-                      </span>
+                    <th
+                      key={habit}
+                      onClick={() => accessMode === 'edit' && openEditHabitModal(habit)}
+                      className={`border-b border-r border-gray-200 group align-bottom px-2 py-3 ${accessMode === 'edit' ? 'cursor-pointer hover:bg-gray-100' : ''} transition-colors`}
+                      style={{ minWidth: `${getHabitColumnWidth(habit)}px`, width: `${getHabitColumnWidth(habit)}px` }}
+                      title={accessMode === 'edit' ? `Edit ${habit}` : habit}
+                    >
+                      <div className="flex min-h-[44px] items-center justify-center gap-1 text-center text-[11px] sm:text-xs font-bold leading-tight text-gray-700 group-hover:text-blue-600 whitespace-normal break-words">
+                        <span className="max-w-[90px] sm:max-w-[120px]">{habit}</span>
+                        {accessMode === 'edit' && <Edit2 size={12} className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />}
+                      </div>
                     </th>
                   ))}
                   {accessMode === 'edit' && (
-                    <th onClick={openAddHabitModal} className="px-2 py-3 border-b border-r border-gray-200 writing-vertical max-w-[40px] cursor-pointer hover:bg-blue-50 transition-colors" title="Add New Habit">
-                      <span className="inline-block transform -rotate-45 origin-bottom-left pt-6 pb-2 w-24 text-blue-600 font-bold flex items-center gap-1">
-                        Add <Plus size={14} className="flex-shrink-0"/>
-                      </span>
+                    <th
+                      onClick={openAddHabitModal}
+                      className="border-b border-r border-gray-200 cursor-pointer hover:bg-blue-50 transition-colors align-bottom px-2 py-3"
+                      style={{ minWidth: '72px', width: '72px' }}
+                      title="Add New Habit"
+                    >
+                      <div className="flex min-h-[44px] items-center justify-center gap-1 text-center text-[11px] sm:text-xs font-bold leading-tight text-blue-600 whitespace-normal">
+                        <span>Add</span>
+                        <Plus size={14} className="flex-shrink-0"/>
+                      </div>
                     </th>
                   )}
-                  <th className="px-4 py-3 border-b border-r border-gray-200 text-center">% Done</th>
-                  <th className="px-4 py-3 border-b border-r border-gray-200 text-center">Score</th>
-                  <th className="px-4 py-3 border-b border-gray-200 min-w-[200px]">Notes</th>
+                  <th className="px-4 py-3 border-b border-r border-gray-200 text-center align-bottom">% Done</th>
+                  <th className="px-4 py-3 border-b border-r border-gray-200 text-center align-bottom">Score</th>
+                  <th className="px-4 py-3 border-b border-gray-200 min-w-[200px] align-bottom">Notes</th>
                 </tr>
               </thead>
               <tbody>
@@ -524,7 +542,12 @@ export default function App() {
                         else cellClass += " hover:bg-gray-100"; // Future
 
                         return (
-                          <td key={habit} className={cellClass} onClick={() => accessMode === 'edit' && toggleHabit(dateStr, habit)}>
+                          <td
+                            key={habit}
+                            className={cellClass}
+                            style={{ minWidth: `${getHabitColumnWidth(habit)}px`, width: `${getHabitColumnWidth(habit)}px` }}
+                            onClick={() => accessMode === 'edit' && toggleHabit(dateStr, habit)}
+                          >
                             <div className="w-full h-full min-h-[40px] flex items-center justify-center">
                               {isChecked && <Check size={18} strokeWidth={3} className="animate-in zoom-in duration-200" />}
                             </div>
