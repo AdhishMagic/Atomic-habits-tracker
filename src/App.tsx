@@ -454,7 +454,7 @@ export default function App() {
     const handleNextMonth = () => setActiveTab(MONTHS[(monthIndex + 1) % 12]);
 
     return (
-      <div className="flex flex-col h-[calc(100vh-100px)] sm:h-[calc(100vh-2rem)] animate-fadeIn">
+      <div className="flex flex-col min-h-0 h-[calc(100dvh-100px)] sm:h-[calc(100dvh-2rem)] animate-fadeIn">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div className="flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto justify-between sm:justify-start">
             <button onClick={handlePrevMonth} className="p-2 bg-white rounded-lg shadow-sm hover:bg-gray-50"><ChevronLeft size={20}/></button>
@@ -812,7 +812,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-gray-100 font-sans selection:bg-blue-100 overflow-hidden relative">
+    <div className="flex flex-col md:flex-row min-h-dvh bg-gray-100 font-sans selection:bg-blue-100 overflow-hidden relative">
       
       {/* Mobile Top Navbar */}
       <div className="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center shadow-md z-40">
@@ -925,7 +925,7 @@ export default function App() {
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50/50 relative h-[calc(100vh-60px)] md:h-screen w-full">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 sm:p-4 md:p-8 bg-gray-50/50 relative h-[calc(100dvh-60px)] md:h-[100dvh] w-full smooth-scroll">
         {activeTab === 'Dashboard' && renderDashboard()}
         {MONTHS.includes(activeTab) && renderMonth(MONTHS.indexOf(activeTab))}
         {activeTab === 'Statistics' && renderStats()}
@@ -934,8 +934,8 @@ export default function App() {
 
       {/* Modals Overlay */}
       {habitModal.isOpen && (
-        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-fadeIn">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-5 sm:p-6 w-full max-w-sm shadow-2xl animate-fadeIn">
             <h2 className="text-xl font-bold mb-4 text-gray-800">{habitModal.mode === 'add' ? 'Add New Habit' : 'Edit Habit'}</h2>
             <input 
               type="text" 
@@ -962,8 +962,8 @@ export default function App() {
       )}
 
       {confirmModal.isOpen && (
-        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-fadeIn">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-5 sm:p-6 w-full max-w-sm shadow-2xl animate-fadeIn">
             <h2 className="text-xl font-bold mb-4 text-gray-800">Confirm Action</h2>
             <p className="text-gray-600 mb-6">{confirmModal.text}</p>
             <div className="flex justify-end gap-2">
