@@ -20,6 +20,35 @@ const getHabitColumnWidth = (habit: string) => {
   return Math.max(76, Math.min(180, textWidth));
 };
 
+const LOCKED_RECORDS_TOOLTIP = 'Historical records are locked.';
+
+const getLocalDateString = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const parseLocalDateString = (dateStr: string) => {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
+const addDays = (date: Date, days: number) => {
+  const nextDate = new Date(date);
+  nextDate.setDate(nextDate.getDate() + days);
+  return nextDate;
+};
+
+const isDateInEditableWindow = (dateStr: string, todayStr = getLocalDateString()) => {
+  const date = parseLocalDateString(dateStr);
+  const today = parseLocalDateString(todayStr);
+  const yesterday = addDays(today, -1);
+  const tomorrow = addDays(today, 1);
+
+  return date >= yesterday && date <= tomorrow;
+};
+
 export default function App() {
   // Access Control State
   const [accessMode, setAccessMode] = useState<AccessMode | null>(() => {
@@ -32,6 +61,7 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [year, setYear] = useState(new Date().getFullYear());
+  const [localTodayStr, setLocalTodayStr] = useState(() => getLocalDateString());
   const [habits, setHabits] = useState<string[]>(DEFAULT_HABITS);
   const [data, setData] = useState<HabitData>({});
   
@@ -51,7 +81,17 @@ export default function App() {
     if (savedHabits) setHabits(savedHabits);
   }, []);
 
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setLocalTodayStr(getLocalDateString());
+    }, 60_000);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
   const toggleHabit = (dateStr: string, habit: string) => {
+    if (!isDateInEditableWindow(dateStr, localTodayStr)) return;
+
     setData(prev => {
       const currentDay = prev[dateStr] || {};
       const newData = {
@@ -72,6 +112,8 @@ export default function App() {
   };
 
   const updateNote = (dateStr: string, note: string) => {
+    if (!isDateInEditableWindow(dateStr, localTodayStr)) return;
+
     setData(prev => {
       const currentDay = prev[dateStr] || {};
       const newData: HabitData = {
@@ -448,7 +490,7 @@ export default function App() {
   const renderMonth = (monthIndex: number) => {
     const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
     const monthName = MONTHS[monthIndex];
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = localTodayStr;
 
     const handlePrevMonth = () => setActiveTab(MONTHS[(monthIndex - 1 + 12) % 12]);
     const handleNextMonth = () => setActiveTab(MONTHS[(monthIndex + 1) % 12]);
@@ -516,6 +558,8 @@ export default function App() {
                   
                   const isToday = dateStr === todayStr;
                   const isPast = date < new Date(new Date().setHours(0,0,0,0));
+                  const isEditableDate = isDateInEditableWindow(dateStr, todayStr);
+                  const canEditDate = accessMode === 'edit' && isEditableDate;
                   
                   const dayData = data[dateStr] || {};
                   const completedCount = habits.filter(h => dayData[h]).length;
@@ -535,18 +579,22 @@ export default function App() {
                       </td>
                       {habits.map(habit => {
                         const isChecked = !!dayData[habit];
-                        let cellClass = "cursor-pointer border-r border-gray-200 transition-all text-center p-0 relative group";
+                        let cellClass = "border-r border-gray-200 transition-all text-center p-0 relative group";
                         
                         if (isChecked) cellClass += " bg-green-500 text-white hover:bg-green-600";
                         else if (isPast) cellClass += " bg-red-400/10 hover:bg-red-400/30"; // Missed
                         else cellClass += " hover:bg-gray-100"; // Future
+                        cellClass += canEditDate ? " cursor-pointer" : " cursor-not-allowed";
+                        if (!isEditableDate) cellClass += " opacity-60 grayscale hover:bg-gray-100";
 
                         return (
                           <td
                             key={habit}
                             className={cellClass}
                             style={{ minWidth: `${getHabitColumnWidth(habit)}px`, width: `${getHabitColumnWidth(habit)}px` }}
-                            onClick={() => accessMode === 'edit' && toggleHabit(dateStr, habit)}
+                            onClick={() => canEditDate && toggleHabit(dateStr, habit)}
+                            title={!isEditableDate ? LOCKED_RECORDS_TOOLTIP : undefined}
+                            aria-disabled={!canEditDate}
                           >
                             <div className="w-full h-full min-h-[40px] flex items-center justify-center">
                               {isChecked && <Check size={18} strokeWidth={3} className="animate-in zoom-in duration-200" />}
@@ -568,11 +616,12 @@ export default function App() {
                       <td className="p-0 min-w-[200px]">
                         <input 
                           type="text" 
-                          className={`w-full h-full min-h-[40px] px-4 py-2 bg-transparent border-none focus:outline-none ${accessMode === 'edit' ? 'focus:ring-1 focus:ring-blue-500 text-gray-600' : 'text-gray-500 cursor-default'}`}
-                          placeholder={accessMode === 'edit' ? "Add note..." : ""}
+                          className={`w-full h-full min-h-[40px] px-4 py-2 bg-transparent border-none focus:outline-none ${canEditDate ? 'focus:ring-1 focus:ring-blue-500 text-gray-600' : !isEditableDate ? 'text-gray-400 cursor-not-allowed opacity-70' : 'text-gray-500 cursor-default'}`}
+                          placeholder={canEditDate ? "Add note..." : ""}
                           value={typeof dayData.notes === 'string' ? dayData.notes : ''}
-                          readOnly={accessMode !== 'edit'}
-                          onChange={(e) => accessMode === 'edit' && updateNote(dateStr, e.target.value)}
+                          readOnly={!canEditDate}
+                          onChange={(e) => canEditDate && updateNote(dateStr, e.target.value)}
+                          title={!isEditableDate ? LOCKED_RECORDS_TOOLTIP : undefined}
                         />
                       </td>
                     </tr>
