@@ -29,9 +29,7 @@
 
 ## 🌍 Live Website
 
-> Replace the placeholder below with the deployed Vercel URL.
-
-**https://YOUR-VERCEL-LINK.vercel.app**
+**[Habit_Tracker Check Here...](https://atomic-habits-tracker-phi.vercel.app/)**
 
 ---
 
