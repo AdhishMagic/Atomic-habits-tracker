@@ -9,8 +9,6 @@
 </p>
 
 <p align="center">
-  <a href="https://YOUR-VERCEL-LINK.vercel.app"><strong>🌐 Live Demo</strong></a>
-  ·
   <a href="#features">Features</a>
   ·
   <a href="#tech-stack">Tech Stack</a>
@@ -29,9 +27,7 @@
 
 ## 🌍 Live Website
 
-> Replace the placeholder below with the deployed Vercel URL.
-
-**https://YOUR-VERCEL-LINK.vercel.app**
+**[Habit_Tracker Check Here...](https://atomic-habits-tracker-phi.vercel.app/)**
 
 ---
 
@@ -256,8 +252,7 @@ This project is licensed under the [MIT License](./LICENSE).
 **Built with dedication by Bala Adhish**
 
 - GitHub: [@AdhishMagic](https://github.com/AdhishMagic)
-- LinkedIn: Add your LinkedIn URL
-- Portfolio: Add your portfolio URL
+
 
 ---
 
