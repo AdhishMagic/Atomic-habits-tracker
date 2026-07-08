@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title>Atomic Habits Tracker</title>
+  <defs>
+    <linearGradient id="bg" x1="12" y1="56" x2="56" y2="8" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#16a34a"/>
+      <stop offset="1" stop-color="#0ea5e9"/>
+    </linearGradient>
+    <linearGradient id="line" x1="16" y1="45" x2="48" y2="19" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#bbf7d0"/>
+      <stop offset="1" stop-color="#e0f2fe"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#bg)"/>
+  <path d="M18 20.5h28a5 5 0 0 1 5 5V46a5 5 0 0 1-5 5H18a5 5 0 0 1-5-5V25.5a5 5 0 0 1 5-5Z" fill="#ffffff" opacity=".18"/>
+  <path d="M14 30h36" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity=".42"/>
+  <path d="M22 16v9M42 16v9" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+  <path d="m20.5 39.5 7 7L45 27.5" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M20 45c9.5-.5 18.5-7 27-20" fill="none" stroke="url(#line)" stroke-width="2.5" stroke-linecap="round" opacity=".75"/>
+</svg>
