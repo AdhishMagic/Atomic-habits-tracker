@@ -9,8 +9,6 @@
 </p>
 
 <p align="center">
-  <a href="https://YOUR-VERCEL-LINK.vercel.app"><strong>🌐 Live Demo</strong></a>
-  ·
   <a href="#features">Features</a>
   ·
   <a href="#tech-stack">Tech Stack</a>
