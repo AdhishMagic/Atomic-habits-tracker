@@ -1,6 +1,5 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getDatabase } from 'firebase/database';
+import { initializeApp } from '@firebase/app';
+import { getDatabase } from '@firebase/database';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -23,6 +22,5 @@ const hasFirebaseConfig = Boolean(
 const firebaseApp = hasFirebaseConfig ? initializeApp(firebaseConfig) : null;
 
 export const appId = firebaseConfig.appId || firebaseConfig.projectId || 'atomic-habits-tracker';
-export const auth = firebaseApp ? getAuth(firebaseApp) : null;
 export const db = firebaseApp ? getDatabase(firebaseApp) : null;
 export const isFirebaseConfigured = hasFirebaseConfig;

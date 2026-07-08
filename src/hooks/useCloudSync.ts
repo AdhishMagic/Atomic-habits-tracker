@@ -1,8 +1,6 @@
 import { type Dispatch, type SetStateAction, useCallback, useEffect, useState } from 'react';
-import type { User } from 'firebase/auth';
-import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
-import { get, onValue, ref, set, update, type Database } from 'firebase/database';
-import { auth, db } from '../services/firebase';
+import { get, onValue, ref, set, update, type Database } from '@firebase/database';
+import { db } from '../services/firebase';
 import type { HabitData, SyncStatus } from '../types';
 import { saveStoredData, saveStoredHabits } from '../utils/storage';
 
@@ -14,49 +12,48 @@ type UseCloudSyncOptions = {
 type TrackerCloudState = {
   data?: HabitData;
   habits?: string[];
+  notes?: Record<string, string>;
   lastUpdated?: string;
 };
 
-const getTrackerRef = (database: Database, uid: string) => ref(database, `users/${uid}/trackerData`);
+const extractNotes = (data: HabitData) =>
+  Object.entries(data).reduce<Record<string, string>>((notes, [date, dayData]) => {
+    if (typeof dayData.notes === 'string') {
+      notes[date] = dayData.notes;
+    }
+
+    return notes;
+  }, {});
+
+const hydrateDataWithNotes = (data: HabitData, notes?: Record<string, string>) => {
+  if (!notes) return data;
+
+  return Object.entries(notes).reduce<HabitData>(
+    (hydratedData, [date, note]) => ({
+      ...hydratedData,
+      [date]: {
+        ...(hydratedData[date] || {}),
+        notes: note,
+      },
+    }),
+    { ...data },
+  );
+};
 
 export const useCloudSync = ({ setData, setHabits }: UseCloudSyncOptions) => {
-  const [user, setUser] = useState<User | null>(null);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('offline');
 
   useEffect(() => {
-    if (!auth) return;
-    const currentAuth = auth;
+    if (!db) return;
 
-    const initAuth = async () => {
-      try {
-        await signInAnonymously(currentAuth);
-      } catch (error) {
-        console.error('Auth error:', error);
-        setSyncStatus('offline');
-      }
-    };
-
-    initAuth();
-
-    const unsubscribe = onAuthStateChanged(currentAuth, currentUser => {
-      setUser(currentUser);
-      if (!currentUser) setSyncStatus('offline');
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (!user || !db) return;
-
-    setSyncStatus('syncing');
-    const trackerRef = getTrackerRef(db, user.uid);
+    const database: Database = db;
+    const trackerRef = ref(database, 'habitTracker');
 
     const applyCloudState = (cloudData: TrackerCloudState | null | undefined) => {
       if (!cloudData) return;
 
-      if (cloudData.data) {
-        const syncedData = cloudData.data as HabitData;
+      if (cloudData.data || cloudData.notes) {
+        const syncedData = hydrateDataWithNotes((cloudData.data || {}) as HabitData, cloudData.notes);
         setData(syncedData);
         saveStoredData(syncedData);
       }
@@ -67,6 +64,8 @@ export const useCloudSync = ({ setData, setHabits }: UseCloudSyncOptions) => {
         saveStoredHabits(syncedHabits);
       }
     };
+
+    setSyncStatus('syncing');
 
     const syncInitialCloudState = async () => {
       try {
@@ -96,19 +95,21 @@ export const useCloudSync = ({ setData, setHabits }: UseCloudSyncOptions) => {
     );
 
     return () => unsubscribe();
-  }, [setData, setHabits, user]);
+  }, [setData, setHabits]);
 
   const pushToCloud = useCallback(
     async (newData: HabitData, newHabits: string[]) => {
-      if (!user || !db) return;
+      if (!db) return;
 
       setSyncStatus('syncing');
 
       try {
-        const trackerRef = getTrackerRef(db, user.uid);
+        const database: Database = db;
+        const trackerRef = ref(database, 'habitTracker');
         const cloudPayload: TrackerCloudState = {
           data: newData,
           habits: newHabits,
+          notes: extractNotes(newData),
           lastUpdated: new Date().toISOString(),
         };
 
@@ -126,7 +127,7 @@ export const useCloudSync = ({ setData, setHabits }: UseCloudSyncOptions) => {
         setSyncStatus('offline');
       }
     },
-    [user],
+    [],
   );
 
   return { syncStatus, pushToCloud };

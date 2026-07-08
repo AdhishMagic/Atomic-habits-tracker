@@ -12,7 +12,7 @@ A production-ready, cloud-synced Atomic Habits Tracker built with React 18, Type
 - Streak, perfect-day, best-month, and habit-performance calculations
 - Responsive desktop, tablet, and mobile layout
 - Mobile sidebar navigation
-- Firebase anonymous auth and Realtime Database cloud sync
+- Firebase Realtime Database cloud sync
 - Local Storage fallback when Firebase is not configured or unavailable
 - Offline JSON backup export
 - Vercel-ready Vite build
@@ -32,7 +32,6 @@ Add screenshots after deployment:
 - TypeScript
 - Vite
 - Tailwind CSS
-- Firebase Authentication
 - Firebase Realtime Database
 - Recharts
 - Lucide React
@@ -98,15 +97,14 @@ If Firebase variables are omitted, the app still runs with Local Storage fallbac
 ## Firebase Setup
 
 1. Create a Firebase project.
-2. Enable Anonymous Authentication in Firebase Authentication.
-3. Create a Realtime Database instance and copy its database URL into `VITE_FIREBASE_DATABASE_URL`.
-4. Add the Firebase web app config values to `.env`.
-5. Configure Realtime Database rules for your deployment needs.
+2. Create a Realtime Database instance and copy its database URL into `VITE_FIREBASE_DATABASE_URL`.
+3. Add the Firebase web app config values to `.env`.
+4. Configure Realtime Database rules for your deployment needs.
 
-The app stores user data under:
+The app stores shared tracker data under:
 
 ```text
-users/{anonymousUserId}/trackerData/{data,habits,lastUpdated}
+habitTracker/{data,habits,notes,lastUpdated}
 ```
 
 Suggested starter Realtime Database rules:
@@ -114,17 +112,15 @@ Suggested starter Realtime Database rules:
 ```json
 {
    "rules": {
-      "users": {
-         "$uid": {
-            ".read": "auth != null && auth.uid === $uid",
-            ".write": "auth != null && auth.uid === $uid"
-         }
+      "habitTracker": {
+         ".read": true,
+         ".write": true
       }
    }
 }
 ```
 
-If you need public read or a different access model, adjust the rules before deployment.
+The app's PIN gate controls editing in the UI. If you need server-enforced writes, adjust the database rules before deployment.
 
 ## Deployment
 
